@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pico Flasher • RP2040 Tool</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app">
+        <!-- Header -->
+        <header class="header">
+            <div class="logo">
+                <i class="fas fa-microchip"></i>
+                <span>Pico Flasher</span>
+            </div>
+            <div class="header-actions">
+                <button class="btn-icon" id="guideBtn" title="Hướng dẫn">
+                    <i class="fas fa-question-circle"></i>
+                </button>
+            </div>
+            <div class="header-status" id="headerStatus">
+                <span class="status-dot"></span>
+                <span id="connectionStatus">Chưa kết nối</span>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main">
+            <!-- Left Panel - Device -->
+            <div class="panel device-panel">
+                <div class="panel-header">
+                    <i class="fa-brands fa-usb"></i>
+                    <h2>Thiết bị</h2>
+                </div>
+                <div class="panel-content">
+                    <div class="drive-card" id="driveCard">
+                        <div class="drive-icon">
+                            <i class="fas fa-microchip"></i>
+                        </div>
+                        <div class="drive-info">
+                            <div class="drive-name" id="driveName">Chưa chọn ổ đĩa</div>
+                            <div class="drive-status" id="driveStatus">Vui lòng kết nối Pi Pico</div>
+                        </div>
+                        <button class="btn-icon" id="disconnectDriveBtn" style="display: none;">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+
+                    <button class="btn btn-primary btn-full" id="selectDriveBtn">
+                        <i class="fas fa-folder-open"></i>
+                        Chọn ổ đĩa RPI-RP2
+                    </button>
+
+                    <div class="tip-box">
+                        <i class="fas fa-info-circle"></i>
+                        <span>Nhấn BOOTSEL + cắm USB để vào chế độ bootloader</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Panel - Firmware -->
+            <div class="panel firmware-panel">
+                <div class="panel-header">
+                    <i class="fas fa-file-code"></i>
+                    <h2>Firmware</h2>
+                </div>
+                <div class="panel-content">
+                    <!-- Tabs cho Firmware -->
+                    <div class="firmware-tabs">
+                        <button class="firmware-tab active" data-tab="preset">
+                            <i class="fas fa-star"></i>
+                            Có sẵn
+                        </button>
+                        <button class="firmware-tab" data-tab="custom">
+                            <i class="fas fa-upload"></i>
+                            Tùy chỉnh
+                        </button>
+                    </div>
+
+                    <!-- Tab Firmware có sẵn -->
+<div class="firmware-content active" id="preset-tab">
+    <div class="preset-header">
+        <span class="preset-count">Firmware có sẵn</span>
+        <button class="btn-clear-preset" id="clearPresetBtn" style="display: none;">
+            <i class="fas fa-times"></i>
+            Hủy chọn
+        </button>
+    </div>
+    <div class="preset-list" id="presetList">
+        <!-- Sẽ được render tự động từ FileHandler.firmwareCatalog -->
+    </div>
+</div>
+
+                    <!-- Tab Tùy chỉnh -->
+                    <div class="firmware-content" id="custom-tab">
+                        <div class="dropzone" id="dropzone">
+                            <input type="file" id="fileInput" accept=".uf2" hidden>
+                            <i class="fas fa-cloud-upload-alt drop-icon"></i>
+                            <h3>Kéo thả file .uf2 vào đây</h3>
+                            <p>hoặc click để chọn file</p>
+                            <span class="file-hint">Hỗ trợ file .uf2, tối đa 10MB</span>
+                        </div>
+
+                        <div class="file-card" id="fileCard" style="display: none;">
+                            <div class="file-preview">
+                                <i class="fas fa-file-code"></i>
+                            </div>
+                            <div class="file-details">
+                                <div class="file-title" id="fileName"></div>
+                                <div class="file-meta">
+                                    <span id="fileSize"></span>
+                                    <span class="dot"></span>
+                                    <span>UF2 Firmware</span>
+                                </div>
+                            </div>
+                            <button class="btn-icon" id="clearFileBtn">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <button class="btn btn-success btn-full" id="flashBtn" disabled>
+                        <i class="fas fa-bolt"></i>
+                        FLASH NGAY
+                    </button>
+
+                    <!-- Progress -->
+                    <div class="progress-container" id="progressContainer" style="display: none;">
+                        <div class="progress-header">
+                            <span id="progressLabel">Đang flash...</span>
+                            <span id="progressPercent">0%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="progressFill"></div>
+                        </div>
+                        <div class="progress-stats" id="progressStats"></div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Console -->
+        <footer class="console">
+            <div class="console-header">
+                <div class="console-title">
+                    <i class="fas fa-terminal"></i>
+                    <span>Console</span>
+                </div>
+                <div class="console-actions">
+                    <button id="clearLogBtn" title="Xóa log">
+                        <i class="fas fa-eraser"></i>
+                    </button>
+                    <button id="copyLogBtn" title="Copy log">
+                        <i class="fas fa-copy"></i>
+                    </button>
+                    <button id="downloadLogBtn" title="Tải log">
+                        <i class="fas fa-download"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="console-content" id="consoleLog"></div>
+        </footer>
+    </div>
+
+    <!-- Guide Modal -->
+    <div class="modal" id="guideModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-book-open"></i> Hướng dẫn nhanh</h3>
+                <button class="modal-close" id="closeModalBtn">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="steps">
+                    <div class="step">
+                        <div class="step-icon">1</div>
+                        <div class="step-text">
+                            <strong>Vào chế độ bootloader</strong>
+                            <p>Nhấn giữ BOOTSEL, cắm USB, thả BOOTSEL</p>
+                        </div>
+                    </div>
+                    <div class="step">
+                        <div class="step-icon">2</div>
+                        <div class="step-text">
+                            <strong>Chọn ổ đĩa</strong>
+                            <p>Chọn ổ RPI-RP2 từ cửa sổ hiện ra</p>
+                        </div>
+                    </div>
+                    <div class="step">
+                        <div class="step-icon">3</div>
+                        <div class="step-text">
+                            <strong>Chọn firmware</strong>
+                            <p>Chọn firmware có sẵn hoặc upload file .uf2</p>
+                        </div>
+                    </div>
+                    <div class="step">
+                        <div class="step-icon">4</div>
+                        <div class="step-text">
+                            <strong>Flash</strong>
+                            <p>Nhấn FLASH NGAY và đợi hoàn tất</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="utils.js"></script>
+    <script src="file-handler.js"></script>
+    <script src="flash-manager.js"></script>
+    <script src="ui-controller.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
