@@ -29,6 +29,17 @@ const FileHandler = {
             featured: true
         },
         {
+            id: 'demonic_sv',
+            name: 'Demonic SV',
+            icon: 'fa-brands fa-battle-net',
+            description: 'Phần mềm học tập và nghiên cứu tín hiệu không dây',
+            version: 'v1.0.0',
+            tags: ['2x E01 2G4M27D', '2x NRF24L01+PA+LNA', '2 MODE'],
+            size: '201.50KB',
+            url: '\\firmware\\demonic_sv.uf2',
+            featured: true
+        },
+        {
             id: 'demonic',
             name: 'Demonic',
             icon: 'fa-brands fa-battle-net',
